@@ -22,23 +22,23 @@ namespace Output {
     //     }
     // }
 
-void output_angles(unsigned long message_id) {
-    float ypr[3];
-    ypr[0] = TO_DEG(yaw);
-    ypr[1] = TO_DEG(pitch);
-    ypr[2] = TO_DEG(roll);
+    void output_angles(unsigned long message_id) {
+        float ypr[3];
+        ypr[0] = TO_DEG(yaw);
+        ypr[1] = TO_DEG(pitch);
+        ypr[2] = TO_DEG(roll);
 
-    const byte startBoundary = 0x02; // Start of Text (STX) ASCII
-    const byte endBoundary = 0x03;   // End of Text (ETX) ASCII
+        const byte startBoundary = 0x02; // Start of Text (STX) ASCII
+        const byte endBoundary = 0x03;   // End of Text (ETX) ASCII
 
-    Serial.write(startBoundary);
+        Serial.write(startBoundary);
 
-    Serial.write((byte*)&message_id, sizeof(message_id));
+        Serial.write((byte*)&message_id, sizeof(message_id));
 
-    Serial.write((byte*) ypr, sizeof(ypr));
+        Serial.write((byte*) ypr, sizeof(ypr));
 
-    Serial.write(endBoundary);
-}
+        Serial.write(endBoundary);
+    }
 
     void output_calibration(int calibration_sensor) {
         if (calibration_sensor == 0) {  // Accelerometer
@@ -100,10 +100,23 @@ void output_angles(unsigned long message_id) {
         Serial.print(gyro[2]); Serial.println();
     }
 
+    // void output_sensors_binary() {
+    //     Serial.write((byte*) accel, 12);
+    //     Serial.write((byte*) magnetom, 12);
+    //     Serial.write((byte*) gyro, 12);
+    // }
+
     void output_sensors_binary() {
-        Serial.write((byte*) accel, 12);
-        Serial.write((byte*) magnetom, 12);
-        Serial.write((byte*) gyro, 12);
+        // Example 2-byte "start of frame" marker
+        const uint8_t header[2] = {0xAA, 0x55};
+
+        // Write 2-byte header
+        Serial.write(header, 2);
+
+        // Then write the 36-byte sensor data (accel, magnetom, gyro)
+        Serial.write((byte*)accel, 12);      // 3 floats => 12 bytes
+        Serial.write((byte*)magnetom, 12);   // 3 floats => 12 bytes
+        Serial.write((byte*)gyro, 12);       // 3 floats => 12 bytes
     }
 
     void output_sensors() {

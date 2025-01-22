@@ -58,6 +58,8 @@ namespace Globals {
     unsigned long message_id = 0;
 
     bool recording = false;  // Flag to indicate if recording is active
+    unsigned long syncPinHighMillis = 0;
+    bool syncPinActive = false;
 }
 
 // Function definitions
@@ -127,12 +129,12 @@ void check_reset_calibration_session() {
 
 void turn_output_stream_on() {
     output_stream_on = true;
-    digitalWrite(STATUS_LED_PIN, HIGH);
+    // digitalWrite(STATUS_LED_PIN, HIGH);
 }
 
 void turn_output_stream_off() {
     output_stream_on = false;
-    digitalWrite(STATUS_LED_PIN, LOW);
+    // digitalWrite(STATUS_LED_PIN, LOW);
 }
 
 char readChar() {

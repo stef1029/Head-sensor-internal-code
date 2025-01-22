@@ -14,8 +14,6 @@ Refactored for editing in Platformio by Stefan Rogers-Coltman (May 2024).
 
 using namespace Globals;
 
-
-
 void setup() {
     // Init serial output
     Serial.begin(OUTPUT__BAUD_RATE);
@@ -51,14 +49,18 @@ void setup() {
 void loop() {
     // Check for any incoming messages from user:
     if (Serial.available() > 0) {
+        delay(5);
         char command = Serial.read();
         if (command == 's') {  // Start recording
             recording = true;
+            digitalWrite(STATUS_LED_PIN, HIGH);
             // Serial.println("Recording started.");
         } else if (command == 'e') {  // End recording
             recording = false;
+            digitalWrite(STATUS_LED_PIN, LOW);
             // Serial.println("Recording stopped.");
         } else if (command == '#') {  // Start of new control message
+            // delay(5);  // Wait for the message to be fully received
             command = Serial.read();  // Commands
             if (command == 'f') {  // request one output _f_rame
                 output_single_on = true;
@@ -74,18 +76,23 @@ void loop() {
                 Serial.println();
             } else if (command == 'o') {  // Set _o_utput mode
                 char output_param = readChar();
+                
                 if (output_param == 'n') {  // Calibrate _n_ext sensor
                     curr_calibration_sensor = (curr_calibration_sensor + 1) % 3;
                     reset_calibration_session_flag = true;
+
                 } else if (output_param == 't') {  // Output angles as _t_ext
                     output_mode = OUTPUT__MODE_ANGLES;
                     output_format = OUTPUT__FORMAT_TEXT;
+
                 } else if (output_param == 'b') {  // Output angles in _b_inary format
                     output_mode = OUTPUT__MODE_ANGLES;
                     output_format = OUTPUT__FORMAT_BINARY;
+
                 } else if (output_param == 'c') {  // Go to _c_alibration mode
                     output_mode = OUTPUT__MODE_CALIBRATE_SENSORS;
                     reset_calibration_session_flag = true;
+
                 } else if (output_param == 's') {  // Output _s_ensor values
                     char values_param = readChar();
                     char format_param = readChar();
@@ -95,17 +102,20 @@ void loop() {
                         output_mode = OUTPUT__MODE_SENSORS_CALIB;
                     else if (values_param == 'b')  // Output _b_oth sensor values (raw and calibrated)
                         output_mode = OUTPUT__MODE_SENSORS_BOTH;
-
+                        
                     if (format_param == 't')  // Output values as _t_ext
                         output_format = OUTPUT__FORMAT_TEXT;
                     else if (format_param == 'b')  // Output values in _b_inary format
                         output_format = OUTPUT__FORMAT_BINARY;
+
                 } else if (output_param == '0') {  // Disable continuous streaming output
                     turn_output_stream_off();
                     reset_calibration_session_flag = true;
+
                 } else if (output_param == '1') {  // Enable continuous streaming output
                     reset_calibration_session_flag = true;
                     turn_output_stream_on();
+
                 } else if (output_param == 'e') {  // _e_rror output settings
                     char error_param = readChar();
                     if (error_param == '0') output_errors = false;
@@ -159,16 +169,24 @@ void loop() {
                 DCM::Euler_angles();
 
                 if (output_stream_on || output_single_on) {
-                    digitalWrite(SYNC_PIN, HIGH); // Sync pin high
+                    // Raise sync pin and record the time
+                    digitalWrite(SYNC_PIN, HIGH);
+                    syncPinHighMillis = millis();
+                    syncPinActive = true;
+
+                    // Send angles out
                     Output::output_angles(message_id);
-                    digitalWrite(SYNC_PIN, LOW);
                     message_id++;
-                } // Sync pin low
+                }
+
+            // if output mode is something other than angles or calibrate then do the below:
             } else { // Output sensor values
                 if (output_stream_on || output_single_on) {
                     Output::output_sensors();
                 }
             }
+
+
 
             output_single_on = false;
 
@@ -182,5 +200,9 @@ void loop() {
             Serial.println("waiting...");
         }
 #endif
+    }
+        if (syncPinActive && (millis() - syncPinHighMillis >= SYNC_PULSE_DURATION_MS)) {
+        digitalWrite(SYNC_PIN, LOW);
+        syncPinActive = false;
     }
 }

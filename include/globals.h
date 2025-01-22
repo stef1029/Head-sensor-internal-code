@@ -15,7 +15,8 @@
 
 // OUTPUT OPTIONS
 #define OUTPUT__BAUD_RATE 57600
-#define OUTPUT__DATA_INTERVAL 8  // in milliseconds
+#define OUTPUT__DATA_INTERVAL 20  // in milliseconds
+#define SYNC_PULSE_DURATION_MS  (OUTPUT__DATA_INTERVAL / 2)
 
 // Output mode definitions
 #define OUTPUT__MODE_CALIBRATE_SENSORS 0
@@ -58,26 +59,39 @@ Then freeze the values and take the second numbers for each axis and input these
 // #define GYRO_AVERAGE_OFFSET_Y ((float) 47.67)
 // #define GYRO_AVERAGE_OFFSET_Z ((float) 0)
 
-// Ana's sensor values (22nd May 2024 Stefan Rogers-Coltman):
-#define ACCEL_X_MIN ((float) -284.00)
-#define ACCEL_X_MAX ((float) 270.00)
-#define ACCEL_Y_MIN ((float) -281.00)
-#define ACCEL_Y_MAX ((float) 272.00)
-#define ACCEL_Z_MIN ((float) -327.00)
-#define ACCEL_Z_MAX ((float) 232.00)
+/*________        .__  ._____.                 __  .__                              .__                        
+\_   ___ \_____  |  | |__\_ |______________ _/  |_|__| ____   ____   ___  _______  |  |  __ __   ____   ______
+/    \  \/\__  \ |  | |  || __ \_  __ \__  \\   __\  |/  _ \ /    \  \  \/ /\__  \ |  | |  |  \_/ __ \ /  ___/
+\     \____/ __ \|  |_|  || \_\ \  | \// __ \|  | |  (  <_> )   |  \  \   /  / __ \|  |_|  |  /\  ___/ \___ \ 
+ \______  (____  /____/__||___  /__|  (____  /__| |__|\____/|___|  /   \_/  (____  /____/____/  \___  >____  >
+        \/     \/             \/           \/                    \/              \/                 \/     \/
 
+*/// Calibration values (22nd Jan 2025 Stefan Rogers-Coltman):
+// Accelerometer calibration values:
+#define ACCEL_X_MIN ((float) -366.00)
+#define ACCEL_X_MAX ((float) 276.00)
+#define ACCEL_Y_MIN ((float) -279.00)
+#define ACCEL_Y_MAX ((float) 276.00)
+#define ACCEL_Z_MIN ((float) -341.00)
+#define ACCEL_Z_MAX ((float) 342.00)
 
-#define GYRO_AVERAGE_OFFSET_X ((float) 2.8)
-#define GYRO_AVERAGE_OFFSET_Y ((float) 17.8)
-#define GYRO_AVERAGE_OFFSET_Z ((float) -15.26)
+// Gyroscope average offsets:
+#define GYRO_AVERAGE_OFFSET_X ((float) -61.02)
+#define GYRO_AVERAGE_OFFSET_Y ((float) 67.32)
+#define GYRO_AVERAGE_OFFSET_Z ((float) 77.05)
 
+// Magnetometer calibration parameters:
 #define CALIBRATION__MAGN_USE_EXTENDED true
-const float magn_ellipsoid_center[3] = {-37.5993, -316.192, 185.420};
-const float magn_ellipsoid_transform[3][3] = {
-    {0.942895, -0.0298951, -0.0180144},
-    {-0.0298951, 0.815543, 0.0558301},
-    {-0.0180144, 0.0558301, 0.969087}
+const float magn_ellipsoid_center[3] = {
+    124.17942426, 69.48531662, 143.14314198
 };
+const float magn_ellipsoid_transform[3][3] = {
+    {0.66650793, -0.03096661, -0.13819212},
+    {-0.03096661, 0.87595993, -0.14314400},
+    {-0.13819212, -0.14314400, 0.80258595},
+};
+
+
 
 
 
@@ -165,6 +179,8 @@ namespace Globals {
     extern unsigned long message_id;
 
     extern bool recording;  // Flag to indicate if recording is active
+    extern unsigned long syncPinHighMillis;
+    extern bool syncPinActive;
 }
 
 // Compass namespace for Compass-related functions
