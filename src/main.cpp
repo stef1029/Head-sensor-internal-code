@@ -53,10 +53,18 @@ void loop() {
         char command = Serial.read();
         if (command == 's') {  // Start recording
             recording = true;
+            zeroing_mode = false;
+            message_id = 0;  // Reset message_id when starting actual recording
             digitalWrite(STATUS_LED_PIN, HIGH);
             // Serial.println("Recording started.");
+        } else if (command == 'z') {  // Zero values (read sensors without sync pulses)
+            recording = true;
+            zeroing_mode = true;
+            // Serial.println("Zeroing mode started.");
         } else if (command == 'e') {  // End recording
             recording = false;
+            zeroing_mode = false;
+            message_id = 0;  // Reset for next session
             digitalWrite(STATUS_LED_PIN, LOW);
             // Serial.println("Recording stopped.");
         } else if (command == '#') {  // Start of new control message
@@ -169,14 +177,21 @@ void loop() {
                 DCM::Euler_angles();
 
                 if (output_stream_on || output_single_on) {
-                    // Raise sync pin and record the time
-                    digitalWrite(SYNC_PIN, HIGH);
-                    syncPinHighMillis = millis();
-                    syncPinActive = true;
+                    // Only raise sync pin and increment message_id during actual recording, not during zeroing
+                    if (!zeroing_mode) {
+                        // Raise sync pin and record the time
+                        digitalWrite(SYNC_PIN, HIGH);
+                        syncPinHighMillis = millis();
+                        syncPinActive = true;
+                    }
 
-                    // Send angles out
+                    // Send angles out (during both zeroing and recording)
                     Output::output_angles(message_id);
-                    message_id++;
+                    
+                    // Only increment message_id during actual recording, not during zeroing
+                    if (!zeroing_mode) {
+                        message_id++;
+                    }
                 }
 
             // if output mode is something other than angles or calibrate then do the below:

@@ -58,6 +58,7 @@ namespace Globals {
     unsigned long message_id = 0;
 
     bool recording = false;  // Flag to indicate if recording is active
+    bool zeroing_mode = false;  // Flag to indicate if in zeroing mode (no sync pulses)
     unsigned long syncPinHighMillis = 0;
     bool syncPinActive = false;
 }
