@@ -179,6 +179,7 @@ namespace Globals {
     extern unsigned long message_id;
 
     extern bool recording;  // Flag to indicate if recording is active
+    extern bool zeroing_mode;  // Flag to indicate if in zeroing mode (no sync pulses)
     extern unsigned long syncPinHighMillis;
     extern bool syncPinActive;
 }
